@@ -1,6 +1,6 @@
 use std::fmt;
 
-use hidapi as hid;
+use hidapi_rusb as hid;
 
 use super::super::AvailableDevice;
 use transport::error::Error;

@@ -3,7 +3,7 @@
 use std::error;
 use std::fmt;
 
-use hidapi as hid;
+use hidapi_rusb as hid;
 use rusb;
 
 /// Trezor error.

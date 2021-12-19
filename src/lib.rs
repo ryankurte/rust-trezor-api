@@ -28,7 +28,7 @@ extern crate primitive_types;
 
 extern crate byteorder;
 extern crate hex;
-extern crate hidapi;
+extern crate hidapi_rusb;
 extern crate rusb;
 #[macro_use]
 extern crate log;
