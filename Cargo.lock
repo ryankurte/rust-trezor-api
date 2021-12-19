@@ -520,7 +520,7 @@ dependencies = [
 
 [[package]]
 name = "trezor-client"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "bitcoin",
  "bitcoin-bech32",
