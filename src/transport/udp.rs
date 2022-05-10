@@ -6,7 +6,7 @@ use std::net::{UdpSocket, Ipv4Addr, SocketAddrV4};
 use crate::{AvailableDevice, Model};
 
 use super::{AvailableDeviceTransport, error::Error};
-use super::protocol::{Link, ProtocolV2, Protocol};
+use super::protocol::{Link, Protocol, ProtocolV1};
 
 #[derive(Debug)]
 pub struct AvailableEmulatorTransport {
@@ -26,7 +26,10 @@ pub struct EmulatorLink {
 
 impl Link for EmulatorLink {
     fn write_chunk(&mut self, chunk: Vec<u8>) -> Result<(), Error> {
+        trace!("TX: {:02x?}", &chunk);
+
         self.sock.send(&chunk)?;
+
         Ok(())
     }
 
@@ -39,13 +42,15 @@ impl Link for EmulatorLink {
             Err(e) => return Err(e.into()),
         };
 
+        trace!("RX: {:02x?}", &buff[..n]);
+
         Ok((buff[..n]).to_vec())
     }
 }
 
 /// An implementation of the Transport interface for UDP/Emulated devices
 pub struct EmulatorTransport {
-    protocol: ProtocolV2<EmulatorLink>
+    protocol: ProtocolV1<EmulatorLink>
 }
 
 
@@ -57,7 +62,7 @@ impl EmulatorTransport {
         // Setup addresses to check
         // TODO: allow this to be configured in the EmulatorTransport
         let addrs = vec![
-            SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), 21326),
+            SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), 21324),
         ];
 
         // Bind a UDP port for discovery
@@ -122,12 +127,12 @@ impl EmulatorTransport {
         // Set endpoint address and timeouts
         // TODO: how does the library deal with async?
         sock.connect(transport.addr)?;
+        sock.set_read_timeout(Some(Duration::from_millis(500)))?;
 
         let link = EmulatorLink{ sock };
 
         let t = EmulatorTransport{
-            protocol: ProtocolV2{
-                session_id: 0,
+            protocol: ProtocolV1{
                 link
             },
         };
