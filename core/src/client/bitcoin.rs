@@ -2,13 +2,13 @@ use bitcoin::network::constants::Network; //TODO(stevenroose) change after https
 use bitcoin::util::bip32;
 use bitcoin::util::psbt;
 use bitcoin::Address;
-use flows::sign_tx::SignTxProgress;
+use crate::flows::sign_tx::SignTxProgress;
 use secp256k1;
 use unicode_normalization::UnicodeNormalization;
-use utils;
+use crate::utils;
 
-use protos;
-pub use protos::InputScriptType;
+use crate::protos;
+pub use crate::protos::InputScriptType;
 
 use super::{Trezor, TrezorResponse};
 use crate::error::Result;

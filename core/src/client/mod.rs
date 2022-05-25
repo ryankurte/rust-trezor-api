@@ -11,12 +11,12 @@ pub mod common;
 pub use self::common::*;
 
 use super::Model;
-use error::{Error, Result};
+use crate::error::{Error, Result};
 
-use messages::TrezorMessage;
-use protos;
-use protos::MessageType::*;
-use transport::{ProtoMessage, Transport};
+use crate::messages::TrezorMessage;
+use crate::protos;
+use crate::protos::MessageType::*;
+use crate::transport::{ProtoMessage, Transport};
 
 /// A Trezor client.
 pub struct Trezor {

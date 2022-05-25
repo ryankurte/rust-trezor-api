@@ -48,14 +48,14 @@ mod flows {
 	pub mod sign_tx;
 }
 
-pub use client::{
+pub use crate::client::{
 	ButtonRequest, ButtonRequestType, EntropyRequest, Features, InputScriptType, InteractionType,
 	PassphraseRequest, PinMatrixRequest, PinMatrixRequestType, Trezor, TrezorResponse, WordCount,
 };
-pub use error::{Error, Result};
+pub use crate::error::{Error, Result};
 #[cfg(feature = "f_bitcoin")]
-pub use flows::sign_tx::SignTxProgress;
-pub use messages::TrezorMessage;
+pub use crate::flows::sign_tx::SignTxProgress;
+pub use crate::messages::TrezorMessage;
 
 use std::fmt;
 
@@ -110,10 +110,10 @@ impl AvailableDevice {
 pub fn find_devices(debug: bool) -> Result<Vec<AvailableDevice>> {
 	let mut devices = Vec::new();
 
-	use transport::webusb::WebUsbTransport;
+	use crate::transport::webusb::WebUsbTransport;
 	devices.extend(WebUsbTransport::find_devices(debug).map_err(Error::TransportConnect)?);
 	
-	use transport::udp::EmulatorTransport;
+	use crate::transport::udp::EmulatorTransport;
 	devices.extend(EmulatorTransport::find_devices(debug).map_err(Error::TransportConnect)?);
 
 	Ok(devices)
@@ -122,7 +122,7 @@ pub fn find_devices(debug: bool) -> Result<Vec<AvailableDevice>> {
 /// Search for old HID devices. This should only be used for older devices that don't have the
 /// firmware updated to version 1.7.0 yet. Trying to connect to a post-1.7.0 device will fail.
 pub fn find_hid_devices() -> Result<Vec<AvailableDevice>> {
-	use transport::hid::HidTransport;
+	use crate::transport::hid::HidTransport;
 	HidTransport::find_devices(true).map_err(Error::TransportConnect)
 }
 

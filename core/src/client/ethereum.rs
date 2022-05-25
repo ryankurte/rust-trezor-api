@@ -1,4 +1,4 @@
-use protos;
+use crate::protos;
 
 use super::{handle_interaction, Trezor};
 use crate::error::Result;

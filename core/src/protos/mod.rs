@@ -37,3 +37,7 @@ pub use self::messages_ripple::*;
 pub use self::messages_stellar::*;
 pub use self::messages_tezos::*;
 pub use self::messages_tron::*;
+
+pub mod gen {
+    //include!(concat!(env!("OUT_DIR"), "/hw.trezor.messages.rs"));
+}

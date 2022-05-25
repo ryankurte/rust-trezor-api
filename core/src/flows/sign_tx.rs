@@ -7,18 +7,18 @@ use bitcoin::util::psbt;
 use bitcoin::Transaction;
 use bitcoin_hashes::sha256d;
 
-use client::*;
-use error::{Error, Result};
-use protos;
-use utils;
+use crate::client::*;
+use crate::error::{Error, Result};
+use crate::protos;
+use crate::utils;
 
 // Some types with raw protos that we use in the public interface so they have to be exported.
-pub use protos::ButtonRequest_ButtonRequestType as ButtonRequestType;
-pub use protos::Features;
-pub use protos::InputScriptType;
-pub use protos::PinMatrixRequest_PinMatrixRequestType as PinMatrixRequestType;
-use protos::TxAck_TransactionType_TxOutputType_OutputScriptType as OutputScriptType;
-use protos::TxRequest_RequestType as TxRequestType;
+pub use crate::protos::ButtonRequest_ButtonRequestType as ButtonRequestType;
+pub use crate::protos::Features;
+pub use crate::protos::InputScriptType;
+pub use crate::protos::PinMatrixRequest_PinMatrixRequestType as PinMatrixRequestType;
+use crate::protos::TxAck_TransactionType_TxOutputType_OutputScriptType as OutputScriptType;
+use crate::protos::TxRequest_RequestType as TxRequestType;
 
 /// Fulfill a TxRequest for TXINPUT.
 fn ack_input_request(

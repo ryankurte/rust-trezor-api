@@ -14,9 +14,9 @@ use protobuf::error::ProtobufError;
 #[cfg(feature = "f_bitcoin")]
 use secp256k1;
 
-use client::InteractionType;
-use protos;
-use transport;
+use crate::client::InteractionType;
+use crate::protos;
+use crate::transport;
 
 /// Trezor error.
 #[derive(Debug)]

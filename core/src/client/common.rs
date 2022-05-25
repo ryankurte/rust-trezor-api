@@ -1,16 +1,16 @@
 use std::fmt;
 
-use error::{Error, Result};
+use crate::error::{Error, Result};
 
 use super::Trezor;
-use messages::TrezorMessage;
-use protos;
+use crate::messages::TrezorMessage;
+use crate::protos;
 
 // Some types with raw protos that we use in the public interface so they have to be exported.
-pub use protos::ButtonRequest_ButtonRequestType as ButtonRequestType;
-pub use protos::Features;
-pub use protos::InputScriptType;
-pub use protos::PinMatrixRequest_PinMatrixRequestType as PinMatrixRequestType;
+pub use crate::protos::ButtonRequest_ButtonRequestType as ButtonRequestType;
+pub use crate::protos::Features;
+pub use crate::protos::InputScriptType;
+pub use crate::protos::PinMatrixRequest_PinMatrixRequestType as PinMatrixRequestType;
 
 /// The different options for the number of words in a seed phrase.
 pub enum WordCount {
