@@ -22,7 +22,7 @@ pub mod error;
 
 pub use trezor_protos::{self as protos, TrezorMessage};
 
-pub use crate::client::Trezor;
+pub use crate::client::{Trezor, common::TrezorResponse};
 
 #[cfg(todo)]
 pub use crate::client::{

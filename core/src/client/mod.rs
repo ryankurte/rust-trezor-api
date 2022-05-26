@@ -1,9 +1,9 @@
 
-use log::{trace, debug, info, warn};
+use log::{trace, debug};
 
 use trezor_protos::{self as protos, TrezorMessage, MessageType};
 use trezor_protos::management::{Features};
-use trezor_protos::common::{Success, Failure};
+use trezor_protos::common::{Success};
 
 pub mod common;
 pub use self::common::*;
@@ -60,18 +60,20 @@ impl Trezor {
 	) -> Result<TrezorResponse<'a, T, R>> {
 		trace!("Sending {:?} msg: {:?}", S::MESSAGE_TYPE, message);
 		let resp = self.call_raw(message)?;
+
 		if resp.message_type() == R::MESSAGE_TYPE {
 			let resp_msg = resp.into_message()?;
 			trace!("Received {:?} msg: {:?}", R::MESSAGE_TYPE, resp_msg);
 			Ok(TrezorResponse::Ok(result_handler(self, resp_msg)?))
+
 		} else {
 			match resp.message_type() {
-				MessageType_Failure => {
+				MessageType::Failure => {
 					let fail_msg = resp.into_message()?;
 					debug!("Received failure: {:?}", fail_msg);
 					Ok(TrezorResponse::Failure(fail_msg))
 				}
-				MessageType_ButtonRequest => {
+				MessageType::ButtonRequest => {
 					let req_msg = resp.into_message()?;
 					trace!("Received ButtonRequest: {:?}", req_msg);
 					Ok(TrezorResponse::ButtonRequest(ButtonRequest {
@@ -80,7 +82,7 @@ impl Trezor {
 						result_handler,
 					}))
 				}
-				MessageType_PinMatrixRequest => {
+				MessageType::PinMatrixRequest => {
 					let req_msg = resp.into_message()?;
 					trace!("Received PinMatrixRequest: {:?}", req_msg);
 					Ok(TrezorResponse::PinMatrixRequest(PinMatrixRequest {
@@ -89,7 +91,7 @@ impl Trezor {
 						result_handler,
 					}))
 				}
-				MessageType_PassphraseRequest => {
+				MessageType::PassphraseRequest => {
 					let req_msg = resp.into_message()?;
 					trace!("Received PassphraseRequest: {:?}", req_msg);
 					Ok(TrezorResponse::PassphraseRequest(PassphraseRequest {

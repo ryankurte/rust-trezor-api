@@ -1,13 +1,12 @@
 //! # Error Handling
 
-use std::error;
-use std::fmt;
-use std::result;
 
 #[cfg(feature = "f_bitcoin")]
 use bitcoin;
+
 #[cfg(feature = "f_bitcoin")]
 use bitcoin::util::base58;
+
 #[cfg(feature = "f_bitcoin")]
 use bitcoin_hashes::sha256d;
 
@@ -149,5 +148,5 @@ impl From<secp256k1::Error> for Error {
 	}
 }
 
-/// Result type used in this crate.
-pub type Result<T> = result::Result<T, Error>;
+/// Result type alias for this crate.
+pub type Result<T> = std::result::Result<T, Error>;

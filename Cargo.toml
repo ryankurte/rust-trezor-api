@@ -8,9 +8,5 @@ members = [
     "coins/ethereum",
 ]
 
-default-members = [
-    "cli"
-]
-
 [patch.crates-io]
 trezor-client = { path = "./core" }

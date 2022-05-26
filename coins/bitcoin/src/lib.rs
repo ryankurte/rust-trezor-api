@@ -9,7 +9,11 @@ use unicode_normalization::UnicodeNormalization;
 use trezor_client::{Trezor, TrezorResponse, Error};
 use trezor_protos::{self as protos};
 
-use crate::utils;
+mod flows;
+use flows::sign_tx::SignTxProgress;
+
+mod utils;
+
 
 impl Trezor {
 	pub fn get_public_key(
