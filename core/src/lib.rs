@@ -22,7 +22,7 @@ pub mod error;
 
 pub use trezor_protos::{self as protos, TrezorMessage};
 
-pub use crate::client::{Trezor, common::TrezorResponse};
+pub use crate::client::{Trezor, TrezorResponse};
 
 #[cfg(todo)]
 pub use crate::client::{
@@ -67,7 +67,7 @@ impl AvailableDevice {
 	/// Connect to the device.
 	pub fn connect(self) -> Result<Trezor> {
 		let transport = transport::connect(&self).map_err(Error::TransportConnect)?;
-		Ok(client::trezor_with_transport(self.model, transport))
+		Ok(Trezor::new_with_transport(self.model, transport))
 	}
 }
 

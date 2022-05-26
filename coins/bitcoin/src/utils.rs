@@ -3,9 +3,10 @@ use bitcoin::network::constants::Network; //TODO(stevenroose) change after https
 use bitcoin::util::{address, bip32, psbt};
 use bitcoin_bech32::{u5, WitnessProgram};
 use bitcoin_hashes::{hash160, sha256d, Hash};
-use secp256k1;
+use secp256k1::ecdsa::{RecoverableSignature, RecoveryId};
 
-use crate::error::{Error, Result};
+use trezor_client::error::{Error, Result};
+use trezor_protos::{bitcoin as btc};
 
 /// convert Network to bech32 network (this should go away soon)
 fn bech_network(network: Network) -> bitcoin_bech32::constants::Network {
@@ -13,6 +14,7 @@ fn bech_network(network: Network) -> bitcoin_bech32::constants::Network {
 		Network::Bitcoin => bitcoin_bech32::constants::Network::Bitcoin,
 		Network::Testnet => bitcoin_bech32::constants::Network::Testnet,
 		Network::Regtest => bitcoin_bech32::constants::Network::Regtest,
+    	Network::Signet => bitcoin_bech32::constants::Network::Signet,
 	}
 }
 
@@ -29,7 +31,10 @@ pub fn address_from_script(script: &Script, network: Network) -> Option<address:
 				script.as_bytes()[2..34].to_vec(),
 				bech_network(network),
 			) {
-				Ok(prog) => address::Payload::WitnessProgram(prog),
+				Ok(pgm) => address::Payload::WitnessProgram{
+					version: pgm.version(),
+					program: pgm.program(),
+				},
 				Err(_) => return None,
 			}
 		} else if script.is_v0_p2wpkh() {
@@ -53,7 +58,7 @@ pub fn psbt_find_input(
 	psbt: &psbt::PartiallySignedTransaction,
 	txid: sha256d::Hash,
 ) -> Result<&psbt::Input> {
-	let inputs = &psbt.global.unsigned_tx.input;
+	let inputs = &psbt.unsigned_tx.input;
 	let opt = inputs.iter().enumerate().find(|i| i.1.previous_output.txid == txid);
 	let idx = opt.ok_or(Error::TxRequestUnknownTxid(txid))?.0;
 	psbt.inputs.get(idx).ok_or(Error::TxRequestInvalidIndex(idx))
@@ -76,19 +81,19 @@ pub fn to_rev_bytes(hash: &sha256d::Hash) -> [u8; 32] {
 /// Parse a Bitcoin Core-style 65-byte recoverable signature.
 pub fn parse_recoverable_signature(
 	sig: &[u8],
-) -> std::result::Result<secp256k1::RecoverableSignature, secp256k1::Error> {
+) -> std::result::Result<RecoverableSignature, secp256k1::Error> {
 	if sig.len() != 65 {
 		return Err(secp256k1::Error::InvalidSignature);
 	}
 
 	// Bitcoin Core sets the first byte to `27 + rec + (fCompressed ? 4 : 0)`.
-	let rec_id = secp256k1::RecoveryId::from_i32(if sig[0] >= 31 {
+	let rec_id = RecoveryId::from_i32(if sig[0] >= 31 {
 		(sig[0] - 31) as i32
 	} else {
 		(sig[0] - 27) as i32
 	})?;
 
-	secp256k1::RecoverableSignature::from_compact(&sig[1..], rec_id)
+	RecoverableSignature::from_compact(&sig[1..], rec_id)
 }
 
 /// Convert a bitcoin network constant to the Trezor-compatible coin_name string.

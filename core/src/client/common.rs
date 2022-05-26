@@ -27,10 +27,9 @@ pub enum InteractionType {
 pub type ResultHandler<'a, T, R> = dyn Fn(&'a mut Trezor, R) -> Result<T>;
 
 /// A button request message sent by the device.
-pub struct ButtonRequest<'a, T, R: TrezorMessage> {
+pub struct ButtonRequest<'a, R: TrezorMessage> {
 	pub message: common::ButtonRequest,
 	pub client: &'a mut Trezor,
-	pub result_handler: Box<ResultHandler<'a, T, R>>,
 }
 
 impl<'a, T, R: TrezorMessage> fmt::Debug for ButtonRequest<'a, T, R> {
@@ -52,9 +51,9 @@ impl<'a, T, R: TrezorMessage> ButtonRequest<'a, T, R> {
 	// }
 
 	/// Ack the request and get the next message from the device.
-	pub fn ack(self) -> Result<TrezorResponse<'a, T, R>> {
+	pub fn ack(self) -> Result<TrezorResponse<'a, R>> {
 		let req = common::ButtonAck::default();
-		self.client.call(req, self.result_handler)
+		self.client.call(req)
 	}
 }
 
@@ -62,10 +61,9 @@ impl<'a, T, R: TrezorMessage> ButtonRequest<'a, T, R> {
 pub struct PinMatrixRequest<'a, T, R: TrezorMessage> {
 	pub message: common::PinMatrixRequest,
 	pub client: &'a mut Trezor,
-	pub result_handler: Box<ResultHandler<'a, T, R>>,
 }
 
-impl<'a, T, R: TrezorMessage> fmt::Debug for PinMatrixRequest<'a, T, R> {
+impl<'a, T, R: TrezorMessage> fmt::Debug for PinMatrixRequest<'a, R> {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		fmt::Debug::fmt(&self.message, f)
 	}
@@ -78,12 +76,12 @@ impl<'a, T, R: TrezorMessage> PinMatrixRequest<'a, T, R> {
 	}
 
 	/// Ack the request with a PIN and get the next message from the device.
-	pub fn ack_pin(self, pin: String) -> Result<TrezorResponse<'a, T, R>> {
+	pub fn ack_pin(self, pin: String) -> Result<TrezorResponse<'a, R>> {
 		let req = common::PinMatrixAck{
 			pin,
 			..Default::default()
 		};
-		self.client.call(req, self.result_handler)
+		self.client.call(req)
 	}
 }
 
@@ -107,38 +105,38 @@ impl<'a, T, R: TrezorMessage> PassphraseRequest<'a, T, R> {
 	}
 
 	/// Ack the request with a passphrase and get the next message from the device.
-	pub fn ack_passphrase(self, passphrase: String) -> Result<TrezorResponse<'a, T, R>> {
+	pub fn ack_passphrase(self, passphrase: String) -> Result<TrezorResponse<'a, R>> {
 		let mut req = common::PassphraseAck::default();
 		req.passphrase = Some(passphrase);
-		self.client.call(req, self.result_handler)
+		self.client.call(req)
 	}
 
 	/// Ack the request without a passphrase to let the user enter it on the device
 	/// and get the next message from the device.
-	pub fn ack(self, on_device: bool) -> Result<TrezorResponse<'a, T, R>> {
+	pub fn ack(self, on_device: bool) -> Result<TrezorResponse<'a, R>> {
 		let mut req = common::PassphraseAck::default();
 		if on_device {
 			req.on_device = Some(on_device);
 		}
-		self.client.call(req, self.result_handler)
+		self.client.call(req)
 	}
 }
 
 /// A response from a Trezor device.  On every message exchange, instead of the expected/desired
 /// response, the Trezor can ask for some user interaction, or can send a failure.
 #[derive(Debug)]
-pub enum TrezorResponse<'a, T, R: TrezorMessage> {
-	Ok(T),
+pub enum TrezorResponse<'a, R: TrezorMessage> {
+	Ok(R),
 	Failure(common::Failure),
-	ButtonRequest(ButtonRequest<'a, T, R>),
-	PinMatrixRequest(PinMatrixRequest<'a, T, R>),
-	PassphraseRequest(PassphraseRequest<'a, T, R>),
+	ButtonRequest(ButtonRequest<'a, R>),
+	PinMatrixRequest(PinMatrixRequest<'a, R>),
+	PassphraseRequest(PassphraseRequest<'a, R>),
 	//TODO(stevenroose) This should be taken out of this enum and intrinsically attached to the
 	// PassphraseRequest variant.  However, it's currently impossible to do this.  It might be
 	// possible to do with FnBox (currently nightly) or when Box<FnOnce> becomes possible.
 }
 
-impl<'a, T, R: TrezorMessage> fmt::Display for TrezorResponse<'a, T, R> {
+impl<'a, R: TrezorMessage> fmt::Display for TrezorResponse<'a, R> {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
 			TrezorResponse::Ok(ref _m) => write!(f, "Ok"), //TODO(stevenroose) should we make T: Debug?
@@ -150,9 +148,9 @@ impl<'a, T, R: TrezorMessage> fmt::Display for TrezorResponse<'a, T, R> {
 	}
 }
 
-impl<'a, T, R: TrezorMessage> TrezorResponse<'a, T, R> {
+impl<'a, R: TrezorMessage> TrezorResponse<'a, R> {
 	/// Get the actual `Ok` response value or an error if not `Ok`.
-	pub fn ok(self) -> Result<T> {
+	pub fn ok(self) -> Result<R> {
 		match self {
 			TrezorResponse::Ok(m) => Ok(m),
 			TrezorResponse::Failure(m) => Err(Error::FailureResponse(m)),
@@ -169,7 +167,7 @@ impl<'a, T, R: TrezorMessage> TrezorResponse<'a, T, R> {
 	}
 
 	/// Get the button request object or an error if not `ButtonRequest`.
-	pub fn button_request(self) -> Result<ButtonRequest<'a, T, R>> {
+	pub fn button_request(self) -> Result<ButtonRequest<'a, R>> {
 		match self {
 			TrezorResponse::ButtonRequest(r) => Ok(r),
 			TrezorResponse::Ok(_) => Err(Error::UnexpectedMessageType(R::MESSAGE_TYPE)),
@@ -184,7 +182,7 @@ impl<'a, T, R: TrezorMessage> TrezorResponse<'a, T, R> {
 	}
 
 	/// Get the PIN matrix request object or an error if not `PinMatrixRequest`.
-	pub fn pin_matrix_request(self) -> Result<PinMatrixRequest<'a, T, R>> {
+	pub fn pin_matrix_request(self) -> Result<PinMatrixRequest<'a, R>> {
 		match self {
 			TrezorResponse::PinMatrixRequest(r) => Ok(r),
 			TrezorResponse::Ok(_) => Err(Error::UnexpectedMessageType(R::MESSAGE_TYPE)),
@@ -199,7 +197,7 @@ impl<'a, T, R: TrezorMessage> TrezorResponse<'a, T, R> {
 	}
 
 	/// Get the passphrase request object or an error if not `PassphraseRequest`.
-	pub fn passphrase_request(self) -> Result<PassphraseRequest<'a, T, R>> {
+	pub fn passphrase_request(self) -> Result<PassphraseRequest<'a, R>> {
 		match self {
 			TrezorResponse::PassphraseRequest(r) => Ok(r),
 			TrezorResponse::Ok(_) => Err(Error::UnexpectedMessageType(R::MESSAGE_TYPE)),
@@ -214,7 +212,7 @@ impl<'a, T, R: TrezorMessage> TrezorResponse<'a, T, R> {
 	}
 }
 
-pub fn handle_interaction<T, R: TrezorMessage>(resp: TrezorResponse<T, R>) -> Result<T> {
+pub fn handle_interaction<T, R: TrezorMessage>(resp: TrezorResponse<R>) -> Result<T> {
 	match resp {
 		TrezorResponse::Ok(res) => Ok(res),
 		TrezorResponse::Failure(_) => resp.ok(), // assering ok() returns the failure error
@@ -234,7 +232,7 @@ pub struct EntropyRequest<'a> {
 
 impl<'a> EntropyRequest<'a> {
 	/// Provide exactly 32 bytes or entropy.
-	pub fn ack_entropy(self, entropy: Vec<u8>) -> Result<TrezorResponse<'a, (), common::Success>> {
+	pub fn ack_entropy(self, entropy: Vec<u8>) -> Result<TrezorResponse<'a, common::Success>> {
 		if entropy.len() != 32 {
 			return Err(Error::InvalidEntropy);
 		}

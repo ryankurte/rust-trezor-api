@@ -10,3 +10,4 @@ members = [
 
 [patch.crates-io]
 trezor-client = { path = "./core" }
+trezor-protos = { path = "./protos" }

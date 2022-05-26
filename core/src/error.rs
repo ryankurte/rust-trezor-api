@@ -1,19 +1,6 @@
 //! # Error Handling
 
 
-#[cfg(feature = "f_bitcoin")]
-use bitcoin;
-
-#[cfg(feature = "f_bitcoin")]
-use bitcoin::util::base58;
-
-#[cfg(feature = "f_bitcoin")]
-use bitcoin_hashes::sha256d;
-
-#[cfg(feature = "f_bitcoin")]
-use secp256k1;
-
-use crate::client::InteractionType;
 use crate::protos;
 use crate::transport;
 
@@ -61,17 +48,13 @@ pub enum Error {
 	EncodeError(prost::EncodeError),
 
 	/// A failure message was returned by the device.
-	#[error("failure received")]
+	#[error("failure received: {:?}", .0)]
 	FailureResponse(protos::common::Failure),
 
 	/// An unexpected interaction request was returned by the device.
+	#[cfg(todo)]
 	#[error("An unexpected interaction request was returned by the device: {0}")]
 	UnexpectedInteractionRequest(InteractionType),
-
-	/// Error in Base58 decoding
-	#[cfg(feature = "f_bitcoin")]
-	#[error("Error in Base58 decoding: {0}")]
-	Base58(base58::Error),
 
 	/// The given Bitcoin network is not supported.
 	#[error("The given Bitcoin network is not supported.")]
@@ -85,16 +68,6 @@ pub enum Error {
 	#[error("The device referenced a non-existing input or output index.")]
 	TxRequestInvalidIndex(usize),
 
-	/// The device referenced an unknown TXID.
-	#[cfg(feature = "f_bitcoin")]
-	#[error("The device referenced an unknown TXID: {0}")]
-	TxRequestUnknownTxid(sha256d::Hash),
-
-	/// The PSBT is missing the full tx for given input.
-	#[cfg(feature = "f_bitcoin")]
-	#[error("The PSBT is missing the full tx for given input: {0}")]
-	PsbtMissingInputTx(sha256d::Hash),
-
 	/// Device produced invalid TxRequest message.
 	#[error("Invalid TxRequest")]
 	MalformedTxRequest(protos::bitcoin::TxRequest),
@@ -103,15 +76,9 @@ pub enum Error {
 	#[error("Invalid PSBT: {0}")]
 	InvalidPsbt(String),
 
-	/// Error encoding/decoding a Bitcoin data structure.
-	#[cfg(feature = "f_bitcoin")]
-	#[error("Error encoding/decoding a Bitcoin data structure: {0}")]
-	BitcoinEncode(bitcoin::consensus::encode::Error),
-
-	/// Elliptic curve crypto error.
-	#[cfg(feature = "f_bitcoin")]
-	#[error("Elliptic curve crypto error: {0}")]
-	Secp256k1(secp256k1::Error),
+	/// Failed to parse from string
+	#[error("Failed to parse '{0}' from string")]
+	ToString(String),
 }
 
 impl From<prost::DecodeError> for Error {
@@ -124,27 +91,6 @@ impl From<prost::DecodeError> for Error {
 impl From<prost::EncodeError> for Error {
 	fn from(e: prost::EncodeError) -> Error {
 		Error::EncodeError(e)
-	}
-}
-
-#[cfg(feature = "f_bitcoin")]
-impl From<base58::Error> for Error {
-	fn from(e: base58::Error) -> Error {
-		Error::Base58(e)
-	}
-}
-
-#[cfg(feature = "f_bitcoin")]
-impl From<bitcoin::consensus::encode::Error> for Error {
-	fn from(e: bitcoin::consensus::encode::Error) -> Error {
-		Error::BitcoinEncode(e)
-	}
-}
-
-#[cfg(feature = "f_bitcoin")]
-impl From<secp256k1::Error> for Error {
-	fn from(e: secp256k1::Error) -> Error {
-		Error::Secp256k1(e)
 	}
 }
 

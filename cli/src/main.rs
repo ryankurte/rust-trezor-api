@@ -26,8 +26,14 @@ pub struct Args {
 
 #[derive(Clone, PartialEq, Debug, Parser)]
 pub enum Commands {
+    /// List available devices
 	List,
+
+    /// Fetch device information
 	Info,
+
+    /// Set the pin for a connected device
+    SetPin,
 
 	// External subcommands
 	#[clap(external_subcommand)]
@@ -42,30 +48,43 @@ fn main() -> anyhow::Result<()> {
 	// Setup logging
 	let _ = SimpleLogger::init(args.log_level, Default::default());
 
-	// Execute commands
-	match args.command {
+    // Discover available devices
+    let mut devices = trezor_client::find_devices(args.trezor_debug)?;
+
+    // Run commands that do not require a device first
+    match args.command {
 		Commands::List => {
-            let devices = trezor_client::find_devices(args.trezor_debug)?;
             if devices.len() == 0 {
                 info!("No devices found");
                 return Ok(())
             }
 
             info!("Found devices: {:?}", devices);
+
+            return Ok(())
         },
+        _ => (),
+    }
+
+    // Check we have a device matching the supplied index
+    if devices.len() == 0 {
+        warn!("No devices found");
+        return Ok(())
+    }
+    if args.index >= devices.len() {
+        warn!("No device for index {} ({} devices)", args.index, devices.len());
+        return Ok(())
+    }
+
+    // Then connect to the device
+    let mut device = devices.remove(args.index).connect()?;
+    device.init_device(None)?;
+
+    debug!("Using device {:?}", device.model());
+
+	// Execute commands
+	match args.command {
         Commands::Info => {
-            let mut devices = trezor_client::find_devices(args.trezor_debug)?;
-
-            if args.index >= devices.len() {
-                warn!("No device for index {} ({} devices)", args.index, devices.len());
-                return Ok(())
-            }
-
-            let mut device = devices.remove(args.index).connect()?;
-            device.init_device(None)?;
-
-            debug!("Device {:?}", device.model());
-
             if let Some(f) = device.features() {
                 info!("Features:");
                 info!("vendor: {}", f.fw_vendor());
@@ -81,11 +100,23 @@ fn main() -> anyhow::Result<()> {
                 info!("pin protection: {}", f.pin_protection());
                 info!("passphrase protection: {}", f.passphrase_protection());
             }
+        },
+        Commands::SetPin => {
+            debug!("Setting device pin");
+
+            // Request existing pin
+
+            // Request new pin
+
+            // Request new pin (again)
+            
+            todo!()
+
         }
 		Commands::External(_ext) => {
 			todo!("call out to coin subcommands")
 		},
-		_ => todo!("Unhandled command: {:?}", args.command),
+		_ => todo!("Unhandled or unexpected command: {:?}", args.command),
 	}
 
 	Ok(())
