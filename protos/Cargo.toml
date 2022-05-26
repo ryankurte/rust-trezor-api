@@ -1,6 +1,5 @@
 [package]
-name = "trezor-cli"
-description = "Base CLI for interacting with Trezor hardware wallets"
+name = "trezor-protos"
 repository = "https://github.com/ryankurte/trezor-client"
 edition = "2021"
 license = "MPL-2.0"
@@ -9,14 +8,11 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-trezor-client = "*"
+prost = "0.10"
+prost-types = "0.10"
+strum = { version = "*", features = [ "derive" ] }
 
-log = "*"
-simplelog = "*"
+[build-dependencies]
 anyhow = "*"
-clap = { version = "*", features = [ "derive" ] }
-
-
-[[bin]]
-name = "trezor-cli"
-path = "src/main.rs"
+glob = "*"
+prost-build = "*"

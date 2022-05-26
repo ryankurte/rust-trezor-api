@@ -2,9 +2,10 @@
 [workspace]
 members = [
     "core",
+    "protos",
     "cli",
     "coins/bitcoin",
-    "coins/etherium",
+    "coins/ethereum",
 ]
 
 default-members = [

@@ -1,9 +1,11 @@
-use crate::protos;
-
-use super::{handle_interaction, Trezor};
-use crate::error::Result;
 
 use primitive_types::U256;
+
+
+
+use trezor_client::{Trezor, Error};
+use trezor_protos::{self as protos};
+
 
 /// Access list item
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -25,9 +27,39 @@ pub struct Signature {
 	pub v: u64,
 }
 
-impl Trezor {
+pub trait Ethereum {
+    fn ethereum_get_address(&mut self, path: Vec<u32>) -> Result<String>;
+    fn ethereum_sign_message(&mut self, message: Vec<u8>, path: Vec<u32>) -> Result<Signature>;
+    fn ethereum_sign_tx(
+		&mut self,
+		path: Vec<u32>,
+		nonce: Vec<u8>,
+		gas_price: Vec<u8>,
+		gas_limit: Vec<u8>,
+		to: String,
+		value: Vec<u8>,
+		_data: Vec<u8>,
+		chain_id: u64,
+	) -> Result<Signature>;
+
+    pub fn ethereum_sign_eip1559_tx(
+		&mut self,
+		path: Vec<u32>,
+		nonce: Vec<u8>,
+		gas_limit: Vec<u8>,
+		to: String,
+		value: Vec<u8>,
+		_data: Vec<u8>,
+		chain_id: u64,
+		max_gas_fee: Vec<u8>,
+		max_priority_fee: Vec<u8>,
+		access_list: Vec<AccessListItem>,
+	) -> Result<Signature>;
+}
+
+impl Ethereum for Trezor {
 	// ETHEREUM
-	pub fn ethereum_get_address(&mut self, path: Vec<u32>) -> Result<String> {
+	fn ethereum_get_address(&mut self, path: Vec<u32>) -> Result<String> {
 		let mut req = protos::EthereumGetAddress::new();
 		req.set_address_n(path);
 
@@ -37,7 +69,7 @@ impl Trezor {
 		Ok(address)
 	}
 
-	pub fn ethereum_sign_message(&mut self, message: Vec<u8>, path: Vec<u32>) -> Result<Signature> {
+	fn ethereum_sign_message(&mut self, message: Vec<u8>, path: Vec<u32>) -> Result<Signature> {
 		let mut req = protos::EthereumSignMessage::new();
 		req.set_address_n(path);
 		req.set_message(message);
@@ -63,7 +95,7 @@ impl Trezor {
 	}
 
 	#[allow(clippy::too_many_arguments)]
-	pub fn ethereum_sign_tx(
+	fn ethereum_sign_tx(
 		&mut self,
 		path: Vec<u32>,
 		nonce: Vec<u8>,
@@ -110,7 +142,7 @@ impl Trezor {
 	}
 
 	#[allow(clippy::too_many_arguments)]
-	pub fn ethereum_sign_eip1559_tx(
+	fn ethereum_sign_eip1559_tx(
 		&mut self,
 		path: Vec<u32>,
 		nonce: Vec<u8>,
@@ -123,7 +155,7 @@ impl Trezor {
 		max_priority_fee: Vec<u8>,
 		access_list: Vec<AccessListItem>,
 	) -> Result<Signature> {
-		let mut req = protos::EthereumSignTxEIP1559::new();
+		let mut req = protos::ethereum_eip712::EthereumSignTxEIP1559::new();
 		let mut data = _data;
 
 		req.set_address_n(path);

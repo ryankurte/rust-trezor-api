@@ -1,15 +1,25 @@
 [package]
 name = "trezor-btc"
-version = "0.1.0"
+description = "Bitcoin extensions for trezor-client"
+repository = "https://github.com/ryankurte/trezor-client"
 edition = "2021"
+license = "MPL-2.0"
+version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-trezor-client = "*"
 log = "*"
 anyhow = "*"
 clap = { version = "*", features = [ "derive" ] }
+
+trezor-client = "*"
+
+unicode-normalization = { version = "0.1.7", optional = true }
+bitcoin = { version = "0.18.0", optional = true }
+bitcoin_hashes = { version = "0.3", optional = true }
+bitcoin-bech32 = { version = "0.9.0", optional = true }
+secp256k1 = { version = "0.12.0", optional = true }
 
 [[bin]]
 name = "trezor-btc"

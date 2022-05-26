@@ -68,18 +68,18 @@ fn main() -> anyhow::Result<()> {
 
             if let Some(f) = device.features() {
                 info!("Features:");
-                info!("vendor: {}", f.get_vendor());
+                info!("vendor: {}", f.fw_vendor());
                 info!(
                     "version: {}.{}.{}",
-                    f.get_major_version(),
-                    f.get_minor_version(),
-                    f.get_patch_version()
+                    f.major_version,
+                    f.minor_version,
+                    f.patch_version,
                 );
-                info!("device id: {}", f.get_device_id());
-                info!("label: {}", f.get_label());
-                info!("is initialized: {}", f.get_initialized());
-                info!("pin protection: {}", f.get_pin_protection());
-                info!("passphrase protection: {}", f.get_passphrase_protection());
+                info!("device id: {}", f.device_id());
+                info!("label: {}", f.label());
+                info!("is initialized: {}", f.initialized());
+                info!("pin protection: {}", f.pin_protection());
+                info!("passphrase protection: {}", f.passphrase_protection());
             }
         }
 		Commands::External(_ext) => {

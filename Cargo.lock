@@ -146,17 +146,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cli"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "log",
- "simplelog",
- "trezor-client",
-]
-
-[[package]]
 name = "cmake"
 version = "0.1.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -490,12 +479,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "protobuf"
-version = "2.27.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf7e6d18738ecd0902d30d1ad232c9125985a3422929b16c65517b38adc14f96"
-
-[[package]]
 name = "quote"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -595,6 +578,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustversion"
+version = "1.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f2cc38e8fa666e2de3c4aba7edeb5ffc5246c1c2ed0e3d17e560aeeba736b23f"
+
+[[package]]
 name = "secp256k1"
 version = "0.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -626,6 +615,28 @@ name = "strsim"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
+
+[[package]]
+name = "strum"
+version = "0.24.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e96acfc1b70604b8b2f1ffa4c57e59176c7dbb05d556c71ecd2f5498a1dee7f8"
+dependencies = [
+ "strum_macros",
+]
+
+[[package]]
+name = "strum_macros"
+version = "0.24.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6878079b17446e4d3eba6192bb0a2950d5b14f0ed8424b852310e5a94345d0ef"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "rustversion",
+ "syn",
+]
 
 [[package]]
 name = "syn"
@@ -736,8 +747,24 @@ name = "trezor-btc"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bitcoin",
+ "bitcoin-bech32",
+ "bitcoin_hashes",
  "clap",
  "log",
+ "secp256k1",
+ "trezor-client",
+ "unicode-normalization",
+]
+
+[[package]]
+name = "trezor-cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "log",
+ "simplelog",
  "trezor-client",
 ]
 
@@ -759,11 +786,11 @@ dependencies = [
  "primitive-types",
  "prost",
  "prost-build",
- "prost-types",
- "protobuf",
  "rusb",
  "secp256k1",
+ "strum",
  "thiserror",
+ "trezor-protos",
  "unicode-normalization",
 ]
 
@@ -774,7 +801,20 @@ dependencies = [
  "anyhow",
  "clap",
  "log",
+ "primitive-types",
  "trezor-client",
+]
+
+[[package]]
+name = "trezor-protos"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "glob",
+ "prost",
+ "prost-build",
+ "prost-types",
+ "strum",
 ]
 
 [[package]]

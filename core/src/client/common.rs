@@ -3,14 +3,7 @@ use std::fmt;
 use crate::error::{Error, Result};
 
 use super::Trezor;
-use crate::messages::TrezorMessage;
-use crate::protos;
-
-// Some types with raw protos that we use in the public interface so they have to be exported.
-pub use crate::protos::ButtonRequest_ButtonRequestType as ButtonRequestType;
-pub use crate::protos::Features;
-pub use crate::protos::InputScriptType;
-pub use crate::protos::PinMatrixRequest_PinMatrixRequestType as PinMatrixRequestType;
+use crate::{protos::*, TrezorMessage};
 
 /// The different options for the number of words in a seed phrase.
 pub enum WordCount {
@@ -20,7 +13,7 @@ pub enum WordCount {
 }
 
 /// The different types of user interactions the Trezor device can request.
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, strum::Display)]
 pub enum InteractionType {
 	Button,
 	PinMatrix,
@@ -35,7 +28,7 @@ pub type ResultHandler<'a, T, R> = dyn Fn(&'a mut Trezor, R) -> Result<T>;
 
 /// A button request message sent by the device.
 pub struct ButtonRequest<'a, T, R: TrezorMessage> {
-	pub message: protos::ButtonRequest,
+	pub message: common::ButtonRequest,
 	pub client: &'a mut Trezor,
 	pub result_handler: Box<ResultHandler<'a, T, R>>,
 }
@@ -48,8 +41,8 @@ impl<'a, T, R: TrezorMessage> fmt::Debug for ButtonRequest<'a, T, R> {
 
 impl<'a, T, R: TrezorMessage> ButtonRequest<'a, T, R> {
 	/// The type of button request.
-	pub fn request_type(&self) -> ButtonRequestType {
-		self.message.get_code()
+	pub fn request_type(&self) -> common::button_request::ButtonRequestType {
+		self.message.code()
 	}
 
 	/// The metadata sent with the button request.
@@ -60,14 +53,14 @@ impl<'a, T, R: TrezorMessage> ButtonRequest<'a, T, R> {
 
 	/// Ack the request and get the next message from the device.
 	pub fn ack(self) -> Result<TrezorResponse<'a, T, R>> {
-		let req = protos::ButtonAck::new();
+		let req = common::ButtonAck::default();
 		self.client.call(req, self.result_handler)
 	}
 }
 
 /// A PIN matrix request message sent by the device.
 pub struct PinMatrixRequest<'a, T, R: TrezorMessage> {
-	pub message: protos::PinMatrixRequest,
+	pub message: common::PinMatrixRequest,
 	pub client: &'a mut Trezor,
 	pub result_handler: Box<ResultHandler<'a, T, R>>,
 }
@@ -80,21 +73,23 @@ impl<'a, T, R: TrezorMessage> fmt::Debug for PinMatrixRequest<'a, T, R> {
 
 impl<'a, T, R: TrezorMessage> PinMatrixRequest<'a, T, R> {
 	/// The type of PIN matrix request.
-	pub fn request_type(&self) -> PinMatrixRequestType {
-		self.message.get_field_type()
+	pub fn request_type(&self) -> common::pin_matrix_request::PinMatrixRequestType {
+		self.message.r#type()
 	}
 
 	/// Ack the request with a PIN and get the next message from the device.
 	pub fn ack_pin(self, pin: String) -> Result<TrezorResponse<'a, T, R>> {
-		let mut req = protos::PinMatrixAck::new();
-		req.set_pin(pin);
+		let req = common::PinMatrixAck{
+			pin,
+			..Default::default()
+		};
 		self.client.call(req, self.result_handler)
 	}
 }
 
 /// A passphrase request message sent by the device.
 pub struct PassphraseRequest<'a, T, R: TrezorMessage> {
-	pub message: protos::PassphraseRequest,
+	pub message: common::PassphraseRequest,
 	pub client: &'a mut Trezor,
 	pub result_handler: Box<ResultHandler<'a, T, R>>,
 }
@@ -108,22 +103,22 @@ impl<'a, T, R: TrezorMessage> fmt::Debug for PassphraseRequest<'a, T, R> {
 impl<'a, T, R: TrezorMessage> PassphraseRequest<'a, T, R> {
 	/// Check whether the use is supposed to enter the passphrase on the device or not.
 	pub fn on_device(&self) -> bool {
-		self.message.get__on_device()
+		self.message.on_device()
 	}
 
 	/// Ack the request with a passphrase and get the next message from the device.
 	pub fn ack_passphrase(self, passphrase: String) -> Result<TrezorResponse<'a, T, R>> {
-		let mut req = protos::PassphraseAck::new();
-		req.set_passphrase(passphrase);
+		let mut req = common::PassphraseAck::default();
+		req.passphrase = Some(passphrase);
 		self.client.call(req, self.result_handler)
 	}
 
 	/// Ack the request without a passphrase to let the user enter it on the device
 	/// and get the next message from the device.
 	pub fn ack(self, on_device: bool) -> Result<TrezorResponse<'a, T, R>> {
-		let mut req = protos::PassphraseAck::new();
+		let mut req = common::PassphraseAck::default();
 		if on_device {
-			req.set_on_device(on_device);
+			req.on_device = Some(on_device);
 		}
 		self.client.call(req, self.result_handler)
 	}
@@ -134,7 +129,7 @@ impl<'a, T, R: TrezorMessage> PassphraseRequest<'a, T, R> {
 #[derive(Debug)]
 pub enum TrezorResponse<'a, T, R: TrezorMessage> {
 	Ok(T),
-	Failure(protos::Failure),
+	Failure(common::Failure),
 	ButtonRequest(ButtonRequest<'a, T, R>),
 	PinMatrixRequest(PinMatrixRequest<'a, T, R>),
 	PassphraseRequest(PassphraseRequest<'a, T, R>),
@@ -177,7 +172,7 @@ impl<'a, T, R: TrezorMessage> TrezorResponse<'a, T, R> {
 	pub fn button_request(self) -> Result<ButtonRequest<'a, T, R>> {
 		match self {
 			TrezorResponse::ButtonRequest(r) => Ok(r),
-			TrezorResponse::Ok(_) => Err(Error::UnexpectedMessageType(R::message_type())),
+			TrezorResponse::Ok(_) => Err(Error::UnexpectedMessageType(R::MESSAGE_TYPE)),
 			TrezorResponse::Failure(m) => Err(Error::FailureResponse(m)),
 			TrezorResponse::PinMatrixRequest(_) => {
 				Err(Error::UnexpectedInteractionRequest(InteractionType::PinMatrix))
@@ -192,7 +187,7 @@ impl<'a, T, R: TrezorMessage> TrezorResponse<'a, T, R> {
 	pub fn pin_matrix_request(self) -> Result<PinMatrixRequest<'a, T, R>> {
 		match self {
 			TrezorResponse::PinMatrixRequest(r) => Ok(r),
-			TrezorResponse::Ok(_) => Err(Error::UnexpectedMessageType(R::message_type())),
+			TrezorResponse::Ok(_) => Err(Error::UnexpectedMessageType(R::MESSAGE_TYPE)),
 			TrezorResponse::Failure(m) => Err(Error::FailureResponse(m)),
 			TrezorResponse::ButtonRequest(_) => {
 				Err(Error::UnexpectedInteractionRequest(InteractionType::Button))
@@ -207,7 +202,7 @@ impl<'a, T, R: TrezorMessage> TrezorResponse<'a, T, R> {
 	pub fn passphrase_request(self) -> Result<PassphraseRequest<'a, T, R>> {
 		match self {
 			TrezorResponse::PassphraseRequest(r) => Ok(r),
-			TrezorResponse::Ok(_) => Err(Error::UnexpectedMessageType(R::message_type())),
+			TrezorResponse::Ok(_) => Err(Error::UnexpectedMessageType(R::MESSAGE_TYPE)),
 			TrezorResponse::Failure(m) => Err(Error::FailureResponse(m)),
 			TrezorResponse::ButtonRequest(_) => {
 				Err(Error::UnexpectedInteractionRequest(InteractionType::Button))
@@ -239,13 +234,15 @@ pub struct EntropyRequest<'a> {
 
 impl<'a> EntropyRequest<'a> {
 	/// Provide exactly 32 bytes or entropy.
-	pub fn ack_entropy(self, entropy: Vec<u8>) -> Result<TrezorResponse<'a, (), protos::Success>> {
+	pub fn ack_entropy(self, entropy: Vec<u8>) -> Result<TrezorResponse<'a, (), common::Success>> {
 		if entropy.len() != 32 {
 			return Err(Error::InvalidEntropy);
 		}
 
-		let mut req = protos::EntropyAck::new();
-		req.set_entropy(entropy);
+		let req = management::EntropyAck{
+			entropy,
+			..Default::default()
+		};
 		self.client.call(req, Box::new(|_, _| Ok(())))
 	}
 }

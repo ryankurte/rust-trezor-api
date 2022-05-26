@@ -12,71 +12,40 @@
 //! Please be aware that `trace` logging can contain sensitive data.
 //!
 
-#[cfg(feature = "f_bitcoin")]
-extern crate bitcoin;
-#[cfg(feature = "f_bitcoin")]
-extern crate bitcoin_bech32;
-#[cfg(feature = "f_bitcoin")]
-extern crate bitcoin_hashes;
-#[cfg(feature = "f_bitcoin")]
-extern crate secp256k1;
-#[cfg(feature = "f_bitcoin")]
-extern crate unicode_normalization;
 
-#[cfg(feature = "f_ethereum")]
-extern crate primitive_types;
+use log::{debug, info, warn, error};
 
-extern crate byteorder;
-extern crate hex;
-extern crate hidapi_rusb;
-extern crate rusb;
-#[macro_use]
-extern crate log;
-extern crate protobuf;
-
-mod messages;
 mod transport;
 
 pub mod client;
 pub mod error;
-pub mod protos;
-#[cfg(feature = "f_bitcoin")]
-pub mod utils;
 
-mod flows {
-	#[cfg(feature = "f_bitcoin")]
-	pub mod sign_tx;
-}
+pub use trezor_protos::{self as protos, TrezorMessage};
 
+pub use crate::client::Trezor;
+
+#[cfg(todo)]
 pub use crate::client::{
 	ButtonRequest, ButtonRequestType, EntropyRequest, Features, InputScriptType, InteractionType,
 	PassphraseRequest, PinMatrixRequest, PinMatrixRequestType, Trezor, TrezorResponse, WordCount,
 };
+
 pub use crate::error::{Error, Result};
-#[cfg(feature = "f_bitcoin")]
-pub use crate::flows::sign_tx::SignTxProgress;
-pub use crate::messages::TrezorMessage;
+
 
 use std::fmt;
 
 /// The different kind of Trezor device models.
-#[derive(PartialEq, Eq, Clone, Debug, Copy)]
+#[derive(PartialEq, Eq, Clone, Debug, Copy, strum::Display)]
 pub enum Model {
+	#[strum(serialize = "Trezor 1")]
 	Trezor1,
+	#[strum(serialize = "Trezor 2")]
 	Trezor2,
+	#[strum(serialize = "Trezor 2 Bootloader")]
 	Trezor2Bl,
+	#[strum(serialize = "Emulator")]
 	Emulator,
-}
-
-impl fmt::Display for Model {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		f.write_str(match self {
-			Model::Trezor1 => "Trezor 1",
-			Model::Trezor2 => "Trezor 2",
-			Model::Trezor2Bl => "Trezor 2 Bootloader",
-			Model::Emulator => "Emulator",
-		})
-	}
 }
 
 /// A device found by the `find_devices()` method.  It can be connected to using the `connect()`

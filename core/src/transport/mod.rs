@@ -1,5 +1,4 @@
 use crate::fmt;
-use protobuf;
 
 use super::{AvailableDevice, Model};
 use crate::protos::MessageType;
@@ -48,8 +47,8 @@ impl ProtoMessage {
 	}
 
 	/// Take the payload from the ProtoMessage and parse it to a protobuf message.
-	pub fn into_message<M: protobuf::Message>(self) -> Result<M, protobuf::error::ProtobufError> {
-		protobuf::Message::parse_from_bytes(&self.into_payload())
+	pub fn into_message<M: prost::Message + Default>(self) -> Result<M, prost::DecodeError> {
+		M::decode(&*self.1)
 	}
 }
 

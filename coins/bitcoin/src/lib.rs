@@ -1,17 +1,15 @@
+
 use bitcoin::network::constants::Network; //TODO(stevenroose) change after https://github.com/rust-bitcoin/rust-bitcoin/pull/181
 use bitcoin::util::bip32;
 use bitcoin::util::psbt;
 use bitcoin::Address;
-use crate::flows::sign_tx::SignTxProgress;
-use secp256k1;
+
 use unicode_normalization::UnicodeNormalization;
+
+use trezor_client::{Trezor, TrezorResponse, Error};
+use trezor_protos::{self as protos};
+
 use crate::utils;
-
-use crate::protos;
-pub use crate::protos::InputScriptType;
-
-use super::{Trezor, TrezorResponse};
-use crate::error::Result;
 
 impl Trezor {
 	pub fn get_public_key(

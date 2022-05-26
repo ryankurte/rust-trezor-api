@@ -3,6 +3,8 @@ use std::io::{ErrorKind};
 use std::time::Duration;
 use std::net::{UdpSocket, Ipv4Addr, SocketAddrV4};
 
+use log::{trace, debug};
+
 use crate::{AvailableDevice, Model};
 
 use super::{AvailableDeviceTransport, error::Error};

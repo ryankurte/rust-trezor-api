@@ -10,7 +10,7 @@ use bitcoin;
 use bitcoin::util::base58;
 #[cfg(feature = "f_bitcoin")]
 use bitcoin_hashes::sha256d;
-use protobuf::error::ProtobufError;
+
 #[cfg(feature = "f_bitcoin")]
 use secp256k1;
 
@@ -19,60 +19,112 @@ use crate::protos;
 use crate::transport;
 
 /// Trezor error.
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
 	/// Less than one device was plugged in.
+	#[error("Less than one device was plugged in.")]
 	NoDeviceFound,
+
 	/// More than one device was plugged in.
+	#[error("More than one device was plugged in.")]
 	DeviceNotUnique,
+
 	/// Transport error connecting to device.
+	#[error("Transport error connecting to device.")]
 	TransportConnect(transport::error::Error),
+
 	/// Transport error while beginning a session.
+	#[error("Transport error while beginning a session.")]
 	TransportBeginSession(transport::error::Error),
+
 	/// Transport error while ending a session.
+	#[error("Transport error while ending a session.")]
 	TransportEndSession(transport::error::Error),
+
 	/// Transport error while sending a message.
+	#[error("Transport error while sending a message.")]
 	TransportSendMessage(transport::error::Error),
+
 	/// Transport error while receiving a message.
+	#[error("Transport error while receiving a message.")]
 	TransportReceiveMessage(transport::error::Error),
+
 	/// Received an unexpected message type from the device.
+	#[error("Received an unexpected message type from the device.")]
 	UnexpectedMessageType(protos::MessageType), //TODO(stevenroose) type alias
+
 	/// Error reading or writing protobuf messages.
-	Protobuf(ProtobufError),
+	#[error("Error reading or writing protobuf messages.")]
+	DecodeError(prost::DecodeError),
+
+	/// Error encoding protobuf messages
+	#[error("Error encoding protobuf messages")]
+	EncodeError(prost::EncodeError),
+
 	/// A failure message was returned by the device.
-	FailureResponse(protos::Failure),
+	#[error("failure received")]
+	FailureResponse(protos::common::Failure),
+
 	/// An unexpected interaction request was returned by the device.
+	#[error("An unexpected interaction request was returned by the device: {0}")]
 	UnexpectedInteractionRequest(InteractionType),
+
 	/// Error in Base58 decoding
 	#[cfg(feature = "f_bitcoin")]
+	#[error("Error in Base58 decoding: {0}")]
 	Base58(base58::Error),
+
 	/// The given Bitcoin network is not supported.
+	#[error("The given Bitcoin network is not supported.")]
 	UnsupportedNetwork,
+
 	/// Provided entropy is not 32 bytes.
+	#[error("Provided entropy is not 32 bytes.")]
 	InvalidEntropy,
+
 	/// The device referenced a non-existing input or output index.
+	#[error("The device referenced a non-existing input or output index.")]
 	TxRequestInvalidIndex(usize),
+
 	/// The device referenced an unknown TXID.
 	#[cfg(feature = "f_bitcoin")]
+	#[error("The device referenced an unknown TXID: {0}")]
 	TxRequestUnknownTxid(sha256d::Hash),
+
 	/// The PSBT is missing the full tx for given input.
 	#[cfg(feature = "f_bitcoin")]
+	#[error("The PSBT is missing the full tx for given input: {0}")]
 	PsbtMissingInputTx(sha256d::Hash),
+
 	/// Device produced invalid TxRequest message.
-	MalformedTxRequest(protos::TxRequest),
+	#[error("Invalid TxRequest")]
+	MalformedTxRequest(protos::bitcoin::TxRequest),
+
 	/// User provided invalid PSBT.
+	#[error("Invalid PSBT: {0}")]
 	InvalidPsbt(String),
+
 	/// Error encoding/decoding a Bitcoin data structure.
 	#[cfg(feature = "f_bitcoin")]
+	#[error("Error encoding/decoding a Bitcoin data structure: {0}")]
 	BitcoinEncode(bitcoin::consensus::encode::Error),
+
 	/// Elliptic curve crypto error.
 	#[cfg(feature = "f_bitcoin")]
+	#[error("Elliptic curve crypto error: {0}")]
 	Secp256k1(secp256k1::Error),
 }
 
-impl From<ProtobufError> for Error {
-	fn from(e: ProtobufError) -> Error {
-		Error::Protobuf(e)
+impl From<prost::DecodeError> for Error {
+	fn from(e: prost::DecodeError) -> Error {
+		Error::DecodeError(e)
+	}
+}
+
+
+impl From<prost::EncodeError> for Error {
+	fn from(e: prost::EncodeError) -> Error {
+		Error::EncodeError(e)
 	}
 }
 
@@ -94,69 +146,6 @@ impl From<bitcoin::consensus::encode::Error> for Error {
 impl From<secp256k1::Error> for Error {
 	fn from(e: secp256k1::Error) -> Error {
 		Error::Secp256k1(e)
-	}
-}
-
-impl error::Error for Error {
-	fn cause(&self) -> Option<&dyn error::Error> {
-		match *self {
-			Error::TransportConnect(ref e) => Some(e),
-			Error::TransportBeginSession(ref e) => Some(e),
-			Error::TransportEndSession(ref e) => Some(e),
-			Error::TransportSendMessage(ref e) => Some(e),
-			Error::TransportReceiveMessage(ref e) => Some(e),
-			#[cfg(feature = "f_bitcoin")]
-			Error::Base58(ref e) => Some(e),
-			_ => None,
-		}
-	}
-}
-
-impl fmt::Display for Error {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		match *self {
-			Error::NoDeviceFound => write!(f, "Trezor device not found"),
-			Error::DeviceNotUnique => write!(f, "multiple Trezor devices found"),
-			Error::UnsupportedNetwork => write!(f, "given network is not supported"),
-			Error::InvalidEntropy => write!(f, "provided entropy is not 32 bytes"),
-			Error::TransportConnect(ref e) => write!(f, "transport connect: {}", e),
-			Error::TransportBeginSession(ref e) => write!(f, "transport beginning session: {}", e),
-			Error::TransportEndSession(ref e) => write!(f, "transport ending session: {}", e),
-			Error::TransportSendMessage(ref e) => write!(f, "transport sending message: {}", e),
-			Error::TransportReceiveMessage(ref e) => {
-				write!(f, "transport receiving message: {}", e)
-			}
-			Error::UnexpectedMessageType(ref t) => {
-				write!(f, "received unexpected message type: {:?}", t)
-			}
-			Error::Protobuf(ref e) => write!(f, "protobuf: {}", e),
-			Error::FailureResponse(ref e) => write!(
-				f,
-				r#"failure received: code={:?} message="{}""#,
-				e.get_code(),
-				e.get_message()
-			),
-			Error::UnexpectedInteractionRequest(ref r) => {
-				write!(f, "unexpected interaction request: {:?}", r)
-			}
-			#[cfg(feature = "f_bitcoin")]
-			Error::Base58(ref e) => fmt::Display::fmt(e, f),
-			Error::TxRequestInvalidIndex(ref i) => {
-				write!(f, "device referenced non-existing input or output index: {}", i)
-			}
-			#[cfg(feature = "f_bitcoin")]
-			Error::TxRequestUnknownTxid(ref txid) => {
-				write!(f, "device referenced unknown TXID: {}", txid)
-			}
-			#[cfg(feature = "f_bitcoin")]
-			Error::PsbtMissingInputTx(ref txid) => write!(f, "PSBT missing input tx: {}", txid),
-			Error::MalformedTxRequest(ref m) => write!(f, "malformed TxRequest: {:?}", m),
-			Error::InvalidPsbt(ref m) => write!(f, "invalid PSBT: {}", m),
-			#[cfg(feature = "f_bitcoin")]
-			Error::BitcoinEncode(ref e) => write!(f, "bitcoin encoding error: {}", e),
-			#[cfg(feature = "f_bitcoin")]
-			Error::Secp256k1(ref e) => write!(f, "ECDSA signature error: {}", e),
-		}
 	}
 }
 

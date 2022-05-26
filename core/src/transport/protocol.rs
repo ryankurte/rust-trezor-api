@@ -1,7 +1,6 @@
 use std::cmp;
 
 use byteorder::{BigEndian, ByteOrder};
-use protobuf::ProtobufEnum;
 
 use crate::protos::MessageType;
 use crate::transport::error::Error;
