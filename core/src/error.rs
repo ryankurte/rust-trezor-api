@@ -1,6 +1,5 @@
 //! # Error Handling
 
-
 use crate::protos;
 use crate::transport;
 
@@ -79,6 +78,18 @@ pub enum Error {
 	/// Failed to parse from string
 	#[error("Failed to parse '{0}' from string")]
 	ToString(String),
+
+	/// Button request
+	#[error("User button request")]
+	ButtonRequest(protos::common::ButtonRequest),
+
+	/// Pin matrix request
+	#[error("Pin matrix request")]
+	PinMatrixRequest(protos::common::PinMatrixRequest),
+
+	/// Passphrase request
+	#[error("Passphrase request")]
+	PassphraseRequest(protos::common::PassphraseRequest),
 }
 
 impl From<prost::DecodeError> for Error {
@@ -86,7 +97,6 @@ impl From<prost::DecodeError> for Error {
 		Error::DecodeError(e)
 	}
 }
-
 
 impl From<prost::EncodeError> for Error {
 	fn from(e: prost::EncodeError) -> Error {

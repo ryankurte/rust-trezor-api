@@ -1,11 +1,7 @@
-
 use primitive_types::U256;
 
-
-
-use trezor_client::{Trezor, Error};
+use trezor_client::{Error, Trezor};
 use trezor_protos::{self as protos};
-
 
 /// Access list item
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -28,9 +24,9 @@ pub struct Signature {
 }
 
 pub trait Ethereum {
-    fn ethereum_get_address(&mut self, path: Vec<u32>) -> Result<String>;
-    fn ethereum_sign_message(&mut self, message: Vec<u8>, path: Vec<u32>) -> Result<Signature>;
-    fn ethereum_sign_tx(
+	fn ethereum_get_address(&mut self, path: Vec<u32>) -> Result<String>;
+	fn ethereum_sign_message(&mut self, message: Vec<u8>, path: Vec<u32>) -> Result<Signature>;
+	fn ethereum_sign_tx(
 		&mut self,
 		path: Vec<u32>,
 		nonce: Vec<u8>,
@@ -42,7 +38,7 @@ pub trait Ethereum {
 		chain_id: u64,
 	) -> Result<Signature>;
 
-    pub fn ethereum_sign_eip1559_tx(
+	pub fn ethereum_sign_eip1559_tx(
 		&mut self,
 		path: Vec<u32>,
 		nonce: Vec<u8>,

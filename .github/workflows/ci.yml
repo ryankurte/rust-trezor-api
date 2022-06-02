@@ -1,18 +1,20 @@
 on:
   push:
-    branches:
-      - master
+    branches: [ main ]
   pull_request:
-
-name: Build
+    branches: [ main ]
+name: rust
 
 jobs:
+  # Build CLI tooling
   build:
-    name: build
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout sources
+      - name: Clone repository
         uses: actions/checkout@v2
+        with:
+          submodules: true
+
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -20,21 +22,31 @@ jobs:
           toolchain: stable
           override: true
           components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@v1
-        with:
-          cache-on-failure: true
+
+      - name: Configure caching
+        uses: actions/cache@v2
+          with:
+            key: docs
+            path: |
+              ${{ env.HOME }}/.cargo
+              ./target
+
       - name: cargo build
         run: |
             export PATH=$HOME/bin:$PATH
             cargo build
             cargo build --features f_bitcoin
             cargo build --features f_ethereum
+
+  # Lint pull requests
   lint:
-    name: lints
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout sources
+      - name: Clone repository
         uses: actions/checkout@v2
+        with:
+          submodules: true
+
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -42,10 +54,60 @@ jobs:
           profile: minimal
           components: rustfmt, clippy
           override: true
-      - uses: Swatinem/rust-cache@v1
-        with:
-          cache-on-failure: true
+
+      - name: Configure caching
+        uses: actions/cache@v2
+          with:
+            key: docs
+            path: |
+              ${{ env.HOME }}/.cargo
+              ./target
+
       - name: cargo fmt
         run: cargo +nightly fmt --all -- --check
+
       - name: cargo clippy
         run: cargo +nightly clippy --all-features -- -D warnings
+
+
+  # Build and publish rustdocs (only on main)
+  docs:
+    runs-on: ubuntu-latest
+    if: github.ref_name == 'main'
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Fetch rust tooling
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+          components: rustfmt, clippy, rustdoc
+
+      - name: Configure caching
+        uses: actions/cache@v2
+          with:
+            key: docs
+            path: |
+              ${{ env.HOME }}/.cargo
+              ./target
+
+      - name: Build documentation
+        uses: actions-rs/cargo@v1
+        with:
+          command: doc
+          args: |
+            --no-deps
+            --package trezor-client
+            --package trezor-protos
+
+      - name: Deploy to GitHub Pages
+        uses: crazy-max/ghaction-github-pages@v3
+        with:
+          target_branch: gh-pages
+          build_dir: target/doc
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

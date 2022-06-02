@@ -1,14 +1,14 @@
 use std::fmt::Display;
-use std::io::{ErrorKind};
+use std::io::ErrorKind;
+use std::net::{Ipv4Addr, SocketAddrV4, UdpSocket};
 use std::time::Duration;
-use std::net::{UdpSocket, Ipv4Addr, SocketAddrV4};
 
-use log::{trace, debug};
+use log::{debug, trace};
 
 use crate::{AvailableDevice, Model};
 
-use super::{AvailableDeviceTransport, error::Error};
 use super::protocol::{Link, Protocol, ProtocolV1};
+use super::{error::Error, AvailableDeviceTransport};
 
 #[derive(Debug)]
 pub struct AvailableEmulatorTransport {
@@ -16,147 +16,140 @@ pub struct AvailableEmulatorTransport {
 }
 
 impl Display for AvailableEmulatorTransport {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "UDP {}", self.addr)
-    }
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "UDP {}", self.addr)
+	}
 }
 
 /// Emulator
 pub struct EmulatorLink {
-    pub sock: UdpSocket,
+	pub sock: UdpSocket,
 }
 
 impl Link for EmulatorLink {
-    fn write_chunk(&mut self, chunk: Vec<u8>) -> Result<(), Error> {
-        trace!("TX: {:02x?}", &chunk);
+	fn write_chunk(&mut self, chunk: Vec<u8>) -> Result<(), Error> {
+		trace!("TX: {:02x?}", &chunk);
 
-        self.sock.send(&chunk)?;
+		self.sock.send(&chunk)?;
 
-        Ok(())
-    }
+		Ok(())
+	}
 
-    fn read_chunk(&mut self) -> Result<Vec<u8>, Error> {
-        let mut buff = [0u8; 16 * 1024];
+	fn read_chunk(&mut self) -> Result<Vec<u8>, Error> {
+		let mut buff = [0u8; 16 * 1024];
 
-        let n = match self.sock.recv(&mut buff) {
-            Ok(n) => n,
-            Err(e) if e.kind() == ErrorKind::WouldBlock => return Err(Error::DeviceReadTimeout),
-            Err(e) => return Err(e.into()),
-        };
+		let n = match self.sock.recv(&mut buff) {
+			Ok(n) => n,
+			Err(e) if e.kind() == ErrorKind::WouldBlock => return Err(Error::DeviceReadTimeout),
+			Err(e) => return Err(e.into()),
+		};
 
-        trace!("RX: {:02x?}", &buff[..n]);
+		trace!("RX: {:02x?}", &buff[..n]);
 
-        Ok((buff[..n]).to_vec())
-    }
+		Ok((buff[..n]).to_vec())
+	}
 }
 
 /// An implementation of the Transport interface for UDP/Emulated devices
 pub struct EmulatorTransport {
-    protocol: ProtocolV1<EmulatorLink>
+	protocol: ProtocolV1<EmulatorLink>,
 }
 
-
 impl EmulatorTransport {
+	/// Find devices using emulator transport
+	pub fn find_devices(debug: bool) -> Result<Vec<AvailableDevice>, Error> {
+		// Setup addresses to check
+		// TODO: allow this to be configured in the EmulatorTransport
+		let addrs = vec![SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), 21324)];
 
-    /// Find devices using emulator transport
-    pub fn find_devices(debug: bool) -> Result<Vec<AvailableDevice>, Error> {
+		// Bind a UDP port for discovery
+		let s = UdpSocket::bind("127.0.0.1:0")?;
+		s.set_read_timeout(Some(Duration::from_millis(500)))?;
 
-        // Setup addresses to check
-        // TODO: allow this to be configured in the EmulatorTransport
-        let addrs = vec![
-            SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), 21324),
-        ];
+		let mut devices = vec![];
 
-        // Bind a UDP port for discovery
-        let s = UdpSocket::bind("127.0.0.1:0")?;
-        s.set_read_timeout(Some(Duration::from_millis(500)))?;
+		// Poll on possible ports
+		for a in &addrs {
+			// Send ping
+			s.send_to(r#"PINGPING"#.as_bytes(), a)?;
 
-        let mut devices = vec![];
+			// Await pong
+			let mut buff = vec![0u8; 16];
 
-        // Poll on possible ports
-        for a in &addrs {
-            // Send ping
-            s.send_to(r#"PINGPING"#.as_bytes(), a)?;
+			let n = match s.recv(&mut buff) {
+				Ok(n) => n,
+				Err(e) if e.kind() == ErrorKind::WouldBlock => continue,
+				Err(e) => return Err(e.into()),
+			};
 
-            // Await pong
-            let mut buff = vec![0u8; 16];
+			if n != 8 {
+				debug!("Received {} bytes (expected {})", n, 8);
+				continue;
+			}
 
-            let n = match s.recv(&mut buff) {
-                Ok(n) => n,
-                Err(e) if e.kind() == ErrorKind::WouldBlock => continue,
-                Err(e) => return Err(e.into()),
-            };
+			if &buff[..n] != r#"PONGPONG"#.as_bytes() {
+				debug!("Received invalid response: {:02x?}", &buff[..n]);
+				continue;
+			}
 
-            if n != 8 {
-                debug!("Received {} bytes (expected {})", n, 8);
-                continue;
-            }
+			debug!("Discovered trezor at UDP: {}", a);
 
-            if &buff[..n] != r#"PONGPONG"#.as_bytes() {
-                debug!("Received invalid response: {:02x?}", &buff[..n]);
-                    continue
-            }
+			devices.push(AvailableDevice {
+				model: Model::Emulator,
+				debug,
+				transport: AvailableDeviceTransport::Udp(AvailableEmulatorTransport {
+					addr: a.clone(),
+				}),
+			})
+		}
 
-            debug!("Discovered trezor at UDP: {}", a);
+		Ok(devices)
+	}
 
-            devices.push(AvailableDevice{
-                model: Model::Emulator,
-                debug,
-                transport: AvailableDeviceTransport::Udp(
-                    AvailableEmulatorTransport{
-                        addr: a.clone()
-                    }
-                ),
-            })
-        }
-
-
-        Ok(devices)
-    }
-
-    /// Connect to device using emulator transport
-    pub fn connect(device: &AvailableDevice) -> Result<Box<dyn super::Transport>, Error> {
-
-        // Check transports match
-        let transport = match device.transport {
+	/// Connect to device using emulator transport
+	pub fn connect(device: &AvailableDevice) -> Result<Box<dyn super::Transport>, Error> {
+		// Check transports match
+		let transport = match device.transport {
 			AvailableDeviceTransport::Udp(ref t) => t,
 			_ => panic!("passed wrong AvailableDevice in EmulatorTransport::connect"),
 		};
 
-        // Bind new socket for device comms
-        let sock = UdpSocket::bind("127.0.0.1:0")?;
+		// Bind new socket for device comms
+		let sock = UdpSocket::bind("127.0.0.1:0")?;
 
-        // Set endpoint address and timeouts
-        // TODO: how does the library deal with async?
-        sock.connect(transport.addr)?;
-        sock.set_read_timeout(Some(Duration::from_millis(500)))?;
+		// Set endpoint address and timeouts
+		// TODO: how does the library deal with async?
+		sock.connect(transport.addr)?;
+		sock.set_read_timeout(Some(Duration::from_millis(500)))?;
 
-        let link = EmulatorLink{ sock };
+		let link = EmulatorLink {
+			sock,
+		};
 
-        let t = EmulatorTransport{
-            protocol: ProtocolV1{
-                link
-            },
-        };
+		let t = EmulatorTransport {
+			protocol: ProtocolV1 {
+				link,
+			},
+		};
 
-        Ok(Box::new(t))
-    }
+		Ok(Box::new(t))
+	}
 }
 
 impl super::Transport for EmulatorTransport {
-    fn session_begin(&mut self) -> Result<(), Error> {
-        self.protocol.session_begin()
-    }
+	fn session_begin(&mut self) -> Result<(), Error> {
+		self.protocol.session_begin()
+	}
 
-    fn session_end(&mut self) -> Result<(), Error> {
-        self.protocol.session_end()
-    }
+	fn session_end(&mut self) -> Result<(), Error> {
+		self.protocol.session_end()
+	}
 
-    fn write_message(&mut self, message: super::ProtoMessage) -> Result<(), Error> {
-        self.protocol.write(message)
-    }
+	fn write_message(&mut self, message: super::ProtoMessage) -> Result<(), Error> {
+		self.protocol.write(message)
+	}
 
-    fn read_message(&mut self) -> Result<super::ProtoMessage, Error> {
-        self.protocol.read()
-    }
+	fn read_message(&mut self) -> Result<super::ProtoMessage, Error> {
+		self.protocol.read()
+	}
 }

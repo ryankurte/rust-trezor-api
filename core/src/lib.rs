@@ -12,26 +12,23 @@
 //! Please be aware that `trace` logging can contain sensitive data.
 //!
 
-
-use log::{debug, info, warn, error};
+use log::{debug, error, info, warn};
 
 mod transport;
 
 pub mod client;
+pub use client::Trezor;
+
 pub mod error;
+pub use error::{Error, Result};
 
 pub use trezor_protos::{self as protos, TrezorMessage};
-
-pub use crate::client::{Trezor, TrezorResponse};
 
 #[cfg(todo)]
 pub use crate::client::{
 	ButtonRequest, ButtonRequestType, EntropyRequest, Features, InputScriptType, InteractionType,
 	PassphraseRequest, PinMatrixRequest, PinMatrixRequestType, Trezor, TrezorResponse, WordCount,
 };
-
-pub use crate::error::{Error, Result};
-
 
 use std::fmt;
 
@@ -81,7 +78,7 @@ pub fn find_devices(debug: bool) -> Result<Vec<AvailableDevice>> {
 
 	use crate::transport::webusb::WebUsbTransport;
 	devices.extend(WebUsbTransport::find_devices(debug).map_err(Error::TransportConnect)?);
-	
+
 	use crate::transport::udp::EmulatorTransport;
 	devices.extend(EmulatorTransport::find_devices(debug).map_err(Error::TransportConnect)?);
 

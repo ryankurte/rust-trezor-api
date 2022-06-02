@@ -6,8 +6,8 @@ use crate::protos::MessageType;
 pub mod error;
 pub mod hid;
 pub mod protocol;
-pub mod webusb;
 pub mod udp;
+pub mod webusb;
 
 /// An available transport for a Trezor device, containing any of the different supported
 /// transports.

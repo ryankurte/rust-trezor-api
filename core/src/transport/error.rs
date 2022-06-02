@@ -14,11 +14,11 @@ pub enum Error {
 	#[error("IO error: {0}")]
 	/// IO error
 	Io(std::io::Error),
-	
+
 	#[error("The device to connect to was not found")]
 	/// The device to connect to was not found.
 	DeviceNotFound,
-	
+
 	#[error("The device is no longer available.")]
 	/// The device is no longer available.
 	DeviceDisconnected,
