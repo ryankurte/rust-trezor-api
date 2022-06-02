@@ -98,7 +98,7 @@ impl EmulatorTransport {
 				model: Model::Emulator,
 				debug,
 				transport: AvailableDeviceTransport::Udp(AvailableEmulatorTransport {
-					addr: a.clone(),
+					addr: *a,
 				}),
 			})
 		}

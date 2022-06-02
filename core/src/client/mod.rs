@@ -32,6 +32,7 @@ impl Trezor {
 		};
 
 		// TODO: check comms / initialise / load features
+		let _ = s;
 
 		s
 	}
@@ -107,7 +108,7 @@ impl Trezor {
 
 	pub fn init_device(&mut self, session_id: Option<Vec<u8>>) -> Result<()> {
 		let features = self.initialize(session_id)?;
-		self.features = Some(features.clone());
+		self.features = Some(features);
 		Ok(())
 	}
 
@@ -121,8 +122,10 @@ impl Trezor {
 	}
 
 	pub fn ping(&mut self, message: &str) -> Result<Success> {
-		let mut req = protos::management::Ping::default();
-		req.message = Some(message.to_owned());
+		let req = protos::management::Ping{
+			message: Some(message.to_owned()),
+			..Default::default()
+		};
 
 		self.call(req)
 	}
@@ -137,11 +140,11 @@ impl Trezor {
 		debug!("Sending pin change request");
 
 		// Issue pin change request
-		let resp = self.call::<_, ButtonRequest>(req)?;
+		let _resp = self.call::<_, ButtonRequest>(req)?;
 
 		// Await confirmation (expect button request)
 		debug!("Awaiting confirmation");
-		let btn_resp = self.call::<_, ButtonRequest>(ButtonAck::default())?;
+		let _btn_resp = self.call::<_, ButtonRequest>(ButtonAck::default())?;
 
 		// Await pin entry
 		debug!("awaiting pin entry");

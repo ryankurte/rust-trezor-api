@@ -25,17 +25,14 @@ jobs:
       - name: Configure caching
         uses: actions/cache@v2
         with:
-          key: docs
+          key: build
           path: |
             ${{ env.HOME }}/.cargo
             ./target
 
       - name: cargo build
         run: |
-            export PATH=$HOME/bin:$PATH
-            cargo build
-            cargo build --features f_bitcoin
-            cargo build --features f_ethereum
+            cargo build --release
 
   # Lint pull requests
   lint:
@@ -57,16 +54,22 @@ jobs:
       - name: Configure caching
         uses: actions/cache@v2
         with:
-          key: docs
+          key: lint
           path: |
             ${{ env.HOME }}/.cargo
             ./target
 
-      - name: cargo fmt
-        run: cargo +nightly fmt --all -- --check
+      - name: Check Format
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
 
-      - name: cargo clippy
-        run: cargo +nightly clippy --all-features -- -D warnings
+    - name: Check clippy
+      uses: actions-rs/cargo@v1
+      with:
+        command: clippy
+        args: --all-features -- -D warnings
 
 
   # Build and publish rustdocs (only on main)

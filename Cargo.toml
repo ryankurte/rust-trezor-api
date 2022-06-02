@@ -4,8 +4,8 @@ members = [
     "core",
     "protos",
     "cli",
-    "coins/bitcoin",
-    "coins/ethereum",
+    #"coins/bitcoin",
+    #"coins/ethereum",
 ]
 
 [patch.crates-io]

@@ -51,21 +51,19 @@ fn main() -> anyhow::Result<()> {
 
 	// Run commands that do not require a device first
 	match args.command {
-		Commands::List => {
-			if devices.len() == 0 {
-				info!("No devices found");
-				return Ok(());
-			}
-
-			info!("Found devices: {:?}", devices);
-
+		Commands::List if devices.is_empty() => {
+			info!("No devices found");
 			return Ok(());
-		}
+		},
+		Commands::List => {
+			info!("Found devices: {:?}", devices);
+			return Ok(());
+		},
 		_ => (),
 	}
 
 	// Check we have a device matching the supplied index
-	if devices.len() == 0 {
+	if devices.is_empty() {
 		warn!("No devices found");
 		return Ok(());
 	}
