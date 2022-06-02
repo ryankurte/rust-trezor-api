@@ -65,11 +65,11 @@ jobs:
           command: fmt
           args: --all -- --check
 
-    - name: Check clippy
-      uses: actions-rs/cargo@v1
-      with:
-        command: clippy
-        args: --all-features -- -D warnings
+      - name: Check clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --all-features -- -D warnings
 
 
   # Build and publish rustdocs (only on main)
