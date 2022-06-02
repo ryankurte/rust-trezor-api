@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["RequestType","Type of information required by transaction signing process"]],"struct":[["TxRequestDetailsType","Structure representing request details"],["TxRequestSerializedType","Structure representing serialized data"]]});

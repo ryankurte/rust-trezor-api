@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["SdProtectOperationType","Structure representing SD card protection operation"]]});

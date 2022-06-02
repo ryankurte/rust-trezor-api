@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["MoneroTransferDetails","Structure representing Monero UTXO for key image sync"]]});

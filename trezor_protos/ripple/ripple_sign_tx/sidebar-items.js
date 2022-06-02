@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["RipplePayment","Payment transaction type"]]});

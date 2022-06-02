@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["nem_cosignatory_modification","Nested message and enum types in `NEMCosignatoryModification`."]],"struct":[["NemCosignatoryModification","Structure representing the cosignatory modification for aggregate modification transactions"]]});

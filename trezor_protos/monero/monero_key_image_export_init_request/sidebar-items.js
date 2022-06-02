@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["MoneroSubAddressIndicesList","Structure representing Monero list of sub-addresses"]]});

@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["trezor_client","trezor_protos"];

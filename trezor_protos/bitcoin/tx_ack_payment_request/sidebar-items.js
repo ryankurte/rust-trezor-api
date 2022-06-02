@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["CoinPurchaseMemo",""],["PaymentRequestMemo",""],["RefundMemo",""],["TextMemo",""]]});

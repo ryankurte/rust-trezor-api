@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["MoneroTransactionData","Structure representing Monero initial transaction information"]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["TezosContractType","Type of Tezos Contract type"]]});

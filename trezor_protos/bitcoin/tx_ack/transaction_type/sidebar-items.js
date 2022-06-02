@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["TxInputType","Structure representing transaction input"],["TxOutputBinType","Structure representing compiled transaction output"],["TxOutputType","Structure representing transaction output"]]});

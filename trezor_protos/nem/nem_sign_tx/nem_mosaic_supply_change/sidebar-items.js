@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["NemSupplyChangeType","Type of supply change which will be applied to mosaic"]]});

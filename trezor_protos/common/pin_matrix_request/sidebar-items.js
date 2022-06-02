@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["PinMatrixRequestType","Type of PIN request"]]});

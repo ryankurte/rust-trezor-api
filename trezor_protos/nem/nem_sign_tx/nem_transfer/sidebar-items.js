@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["NemMosaic","Structure representing the mosaic attachment for NEM transfer transactions"]]});

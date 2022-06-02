@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["MoneroAccountPublicAddress","Structure representing Monero public address"]]});

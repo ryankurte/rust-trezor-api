@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["monero_output_entry","Nested message and enum types in `MoneroOutputEntry`."]],"struct":[["MoneroMultisigKlRki",""],["MoneroOutputEntry",""]]});

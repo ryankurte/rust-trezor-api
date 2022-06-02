@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["StellarMemoType","https://github.com/stellar/stellar-core/blob/02d26858069de7c0eefe065056fb0a19bf72ea56/src/xdr/Stellar-transaction.x#L506-L513"]]});

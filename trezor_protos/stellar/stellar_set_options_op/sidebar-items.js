@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["StellarSignerType","https://github.com/stellar/stellar-core/blob/02d26858069de7c0eefe065056fb0a19bf72ea56/src/xdr/Stellar-types.x#L32-L37"]]});

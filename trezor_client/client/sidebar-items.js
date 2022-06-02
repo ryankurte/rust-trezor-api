@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Trezor","A Trezor device"]]});

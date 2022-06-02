@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["transaction_type","Nested message and enum types in `TransactionType`."]],"struct":[["TransactionType","Structure representing transaction"]]});

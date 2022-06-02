@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["ButtonRequestType","Type of button request"]]});

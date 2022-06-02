@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["RecoveryDeviceType","Type of recovery procedure. These should be used as bitmask, e.g., `RecoveryDeviceType_ScrambledWords | RecoveryDeviceType_Matrix` listing every method supported by the host computer."]]});

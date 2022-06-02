@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["tezos_parameters_manager","Nested message and enum types in `TezosParametersManager`."]],"struct":[["TezosParametersManager",""]]});

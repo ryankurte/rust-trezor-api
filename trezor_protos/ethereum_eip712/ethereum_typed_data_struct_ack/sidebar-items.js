@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["EthereumDataType",""]],"struct":[["EthereumFieldType",""],["EthereumStructMember",""]]});

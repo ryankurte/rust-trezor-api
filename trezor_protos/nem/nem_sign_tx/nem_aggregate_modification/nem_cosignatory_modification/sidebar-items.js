@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["NemModificationType","Type of cosignatory modification"]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["nem_mosaic_definition","Nested message and enum types in `NEMMosaicDefinition`."]],"struct":[["NemMosaicDefinition","Structure representing a mosaic definition"]]});

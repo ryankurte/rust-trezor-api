@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["NemImportanceTransferMode","Mode of importance transfer"]]});

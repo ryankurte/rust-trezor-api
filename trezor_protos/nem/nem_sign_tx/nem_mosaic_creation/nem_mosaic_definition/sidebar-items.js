@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["NemMosaicLevy","Type of levy which will be used for mosaic"]]});

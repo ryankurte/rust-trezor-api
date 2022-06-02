@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["MoneroRingCtSig","Structure represents initial fields of the Monero RCT signature"]]});
