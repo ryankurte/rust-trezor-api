@@ -12,7 +12,7 @@
 //! Please be aware that `trace` logging can contain sensitive data.
 //!
 
-use log::{debug};
+use log::debug;
 
 mod transport;
 

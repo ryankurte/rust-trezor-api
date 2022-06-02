@@ -122,7 +122,7 @@ impl Trezor {
 	}
 
 	pub fn ping(&mut self, message: &str) -> Result<Success> {
-		let req = protos::management::Ping{
+		let req = protos::management::Ping {
 			message: Some(message.to_owned()),
 			..Default::default()
 		};

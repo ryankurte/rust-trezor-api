@@ -54,11 +54,11 @@ fn main() -> anyhow::Result<()> {
 		Commands::List if devices.is_empty() => {
 			info!("No devices found");
 			return Ok(());
-		},
+		}
 		Commands::List => {
 			info!("Found devices: {:?}", devices);
 			return Ok(());
-		},
+		}
 		_ => (),
 	}
 
