@@ -781,6 +781,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "trezor-eth"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "log",
+ "primitive-types",
+ "trezor-client",
+]
+
+[[package]]
 name = "trezor-protos"
 version = "0.1.0"
 dependencies = [
