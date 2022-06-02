@@ -4,7 +4,7 @@ members = [
     "core",
     "protos",
     "cli",
-    #"coins/bitcoin",
+    "coins/bitcoin",
     #"coins/ethereum",
 ]
 
